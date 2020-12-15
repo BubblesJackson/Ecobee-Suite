@@ -1273,7 +1273,7 @@ void changeSetpoints( program, heatTemp, coolTemp ) {
 	def unit = getTemperatureScale()
 	settings.thermostats.each { stat ->
 		LOG("Setting ${stat.displayName} '${program}' heatingSetpoint to ${heatTemp}°${unit}, coolingSetpoint to ${coolTemp}°${unit}",2,null,'info')
-		String tid = stat.identifier.toString()
+		String tid = getDeviceId(stat.deviceNetworkId)
 		boolean anyReserved = anyReservations( tid, 'programChange' )		// need to make sure nobody changes the program Map out from beneath us
 		if (!anyReserved || haveReservation( tid, 'programChange' )) {
 			// Nobody has a reservation, or the reservation is mine
@@ -1658,7 +1658,7 @@ void doPendedUpdates(tid) {
 	if (updates && updates[tid]) {
 		// Find the theremostat
 		settings.thermostats.each { stat ->
-			statTid = stat.currentValue('identifier').toString()
+			statTid = getDeviceId(stat.deviceNetworkId)
 			if (statTid == tid) {
 				if (needSetpointChange( stat, updates[tid].program, updates[tid].heat, updates[tid].cool )) {
 					makeSetpointChange( stat, updates[tid].program, updates[tid].heat, updates[tid].cool )
@@ -1676,7 +1676,7 @@ void doPendedUpdates(tid) {
 }
 def doRefresh( data ) {
 	settings.thermostats.each { stat ->
-		if (stat.currentValue('identifier').toString() == tid) {
+		if (getDeviceId(stat.deviceNetworkId) == tid) {
 			stat.doRefresh(true)
 			return
 		}
@@ -1688,7 +1688,7 @@ def clearReservation( data ) {
 def makeSetpointChange( stat, program, heat, cool ) {
 	subscribe( stat, 'climatesUpdated', programUpdateHandler )
 	stat.setProgramSetpoints( program, heat, cool )
-	String tid = stat.currentValue('identifier').toString()
+	String tid = getDeviceId(stat.deviceNetworkId)
 	runIn(150, clearReservation, [overwrite: false, data: [ tid: tid ]])
 	// programUpdateHandler will release the reservation for us
 }
