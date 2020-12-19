@@ -1601,7 +1601,8 @@ def getDeviceId(networkId) {
 }
 def programUpdateHandler(evt) {
 	// Clear our reservation once we know that the Ecobee Cloud has updated our thermostat's setpoints (climates)
-	cancelReservation(evt.device.currentValue('identifier') as String, 'programChange')
+	String tid = getDeviceId(evt.device.deviceNetworkId)
+	cancelReservation(tid, 'programChange')
 	unsubscribe(evt.device)
 	if (!settings?.tempDisable) {
 		subscribe(evt.device, 'temperature', insideChangeHandler)
@@ -1616,7 +1617,7 @@ def programWaitHandler(evt) {
 		subscribe(evt.device, 'temperature', insideChangeHandler)
 		subscribe(evt.device, 'thermostatMode', thermostatModeHandler)
 	}
-	String tid = evt.device.currentValue('identifier') as String
+	String tid = getDeviceId(evt.device.deviceNetworkId)
 	def count = countReservations(tid, 'programChange')
 	if ((count > 0) && !haveReservation( tid, 'programChange' )) {
 		def waitCounter = atomicState.programWaitCounter ?: [:]
