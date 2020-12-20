@@ -1281,9 +1281,11 @@ void changeSetpoints( program, heatTemp, coolTemp ) {
 			if (needSetpointChange(stat, program, heatTemp, coolTemp)) makeSetpointChange(stat, program, heatTemp, coolTemp)
 		} else {
 			// somebody else has a reservation - we have to wait
+			if (!atomicState.pendedUpdates) atomicState.pendedUpdates = [:]  // protection from atomicState.pendedUpdates being null
 			def pendedUpdates = atomicState.pendedUpdates as Map
+			LOG("Updates pending: ${pendedUpdates}",1,null,'debug')
 			pendedUpdates[tid] = [program: program, heat: heatTemp, cool: coolTemp]
-			atomicStates.pendedUpdates = pendedUpdates
+			atomicState.pendedUpdates = pendedUpdates
 			subscribe(stat, 'climatesUpdated', programWaitHandler)
 			//LOG("Delayed: Sensor ${sensor.displayName} will be added to ${settings.theClimates.toString()[1..-2]} and removed from ${notPrograms.toString()[1..-2]} when pending changes complete",2,null,'info')
 		}
@@ -1659,7 +1661,7 @@ void doPendedUpdates(tid) {
 	if (updates && updates[tid]) {
 		// Find the theremostat
 		settings.thermostats.each { stat ->
-			statTid = getDeviceId(stat.deviceNetworkId)
+			def statTid = getDeviceId(stat.deviceNetworkId)
 			if (statTid == tid) {
 				if (needSetpointChange( stat, updates[tid].program, updates[tid].heat, updates[tid].cool )) {
 					makeSetpointChange( stat, updates[tid].program, updates[tid].heat, updates[tid].cool )

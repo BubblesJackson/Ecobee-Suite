@@ -862,7 +862,7 @@ void doPendedUpdates() {
                 }
             }
         }
-        atomicState.pendedUpdates = null
+        atomicState.pendedUpdates = [:]
     }            	
 }
 def makeClimateChange( sensor, adds, removes ) {
